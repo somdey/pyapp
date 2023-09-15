@@ -6,3 +6,4 @@ pymongo
 pyjwt
 werkzeug
 flask_restful
+Gunicorn==20.1.0
