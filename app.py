@@ -23,8 +23,8 @@ MONGO_URI = "mongodb://%s:%s@%s/?authSource=admin" % (MONGODB_USERNAME, MONGODB_
 
 cluster = MongoClient(MONGO_URI)
 db      = cluster['flaskdb']
-# giving the collection name 
-collection  = db['todo']
+# giving the Todo_C name 
+Todo_C  = db['todo']
 Users  = db['users']
 
 def token_required(f):
@@ -49,12 +49,12 @@ def token_required(f):
 class Todo(Resource):
     @token_required
     def get(self, current_user, todo_id):
-        todo = collection.find_one({'todo_id': todo_id})
+        todo = Todo_C.find_one({'todo_id': todo_id})
         return  Response(json.dumps(todo,default=str),mimetype="application/json")
 
     @token_required
     def delete(self, current_user, todo_id):
-        collection.delete_many({'todo_id': todo_id})
+        Todo_C.delete_many({'todo_id': todo_id})
         return {'message': 'Record deleted successfully'}
     @token_required
     def put(self, current_user, todo_id):
@@ -64,14 +64,14 @@ class Todo(Resource):
             "name"    : name,
             "description"   : description
         }
-        collection.update_many({'todo_id': todo_id}, {'$set': todo_dict})
+        Todo_C.update_many({'todo_id': todo_id}, {'$set': todo_dict})
         return {'message': 'Record updated successfully'}
 
 
 class TodoList(Resource):
     @token_required
     def get(self, current_user):
-        todo_list = collection.find()
+        todo_list = Todo_C.find()
         todo_list = [todo for todo in todo_list]
         parser = reqparse.RequestParser()
         parser.add_argument('page', type=int, default=1)
@@ -96,7 +96,7 @@ class TodoList(Resource):
             "description"   : description
 
         }
-        collection.insert_one(todo_dict)
+        Todo_C.insert_one(todo_dict)
         return {'message': 'Sucessfully created'}
 
 class Register(Resource):
