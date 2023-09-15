@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-app
+  labels:
+    app: {{ template "todo-app.name" . }}
+    chart: {{ template "todo-app.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    require-mongodb-access: "true"
+    require-auth-service-access: "true"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: http
+  selector:
+    container: todo-app
+    app: {{ template "todo-app.name" . }}
+    chart: {{ template "todo-app.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    require-mongodb-access: "true"
+    require-auth-service-access: "true"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app
+  labels:
+    app: {{ template "todo-app.name" . }}
+    chart: {{ template "todo-app.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+    require-mongodb-access: "true"
+    require-auth-service-access: "true"
+spec:
+  replicas:  {{ .Values.replications.todo_app}}
+  selector:
+    matchLabels:
+      container: todo-app
+      app: {{ template "todo-app.name" . }}
+      chart: {{ template "todo-app.chart" . }}
+      heritage: {{ .Release.Service }}
+      release: {{ .Release.Name }}
+      require-mongodb-access: "true"
+      require-auth-service-access: "true"
+  template:
+    metadata:
+      labels:
+        container: todo-app
+        app: {{ template "todo-app.name" . }}
+        chart: {{ template "todo-app.chart" . }}
+        heritage: {{ .Release.Service }}
+        release: {{ .Release.Name }}
+        require-mongodb-access: "true"
+        require-auth-service-access: "true"
+    spec:
+      imagePullSecrets:
+        - name: {{ template "todo-app.fullname" . }}-dcr
+      tolerations:
+      - key: node.kubernetes.io/not-ready
+        effect: NoExecute
+        tolerationSeconds: 0
+      - key: node.kubernetes.io/unreachable
+        effect: NoExecute
+        tolerationSeconds: 0
+      {{- end }}
+      containers:
+      - name: todo-app
+        image: {{ template "imageRegistryPath" . }}/flask-backend-api:{{ .Values.imageVersions.todo_app}} 
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: MONGODB_DATABASE
+          value: "flaskdb"
+        - name: MONGODB_USERNAME
+          value: "flaskuser"
+        - name: MONGODB_HOSTNAME
+          value: "mongodb"
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "todo-app.fullname" . }}-env
+              key: MONGODB_PASSWORD
