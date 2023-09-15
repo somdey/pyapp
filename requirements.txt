@@ -3,3 +3,6 @@ Flask-RESTful==0.3.10
 uuid==1.30
 markupsafe==2.0.1
 pymongo
+pyjwt
+werkzeug
+flask_restful
